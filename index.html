@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jerry Mod - VIP Data Premium</title>
+    <style>
+        /* --- DESIGN SYSTEMS & VARIABLES --- */
+        :root {
+            --bg-dark: #0a0a14;
+            --panel-bg: rgba(18, 18, 32, 0.75);
+            --border-glow: rgba(139, 233, 253, 0.25);
+            --text-main: #f0f0fcf2;
+            --text-muted: #9499c3;
+            --accent-pink: #ff79c6;
+            --accent-cyan: #8be9fd;
+            --accent-green: #50fa7b;
+            --accent-orange: #ffb86c;
+            --font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: linear-gradient(rgba(10, 10, 20, 0.88), rgba(10, 10, 20, 0.95)), 
+                        url('https://i.ibb.co/HfQ6fLNR/25-E720-D4-5-B70-4-F3-A-A100-9-F071-C5-ACCF6.png') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-main);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        #snowCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            padding: 35px;
+            border-radius: 24px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7), 0 0 30px rgba(139, 233, 253, 0.1);
+            width: 100%;
+            max-width: 520px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            z-index: 2;
+            box-sizing: border-box;
+        }
+
+        .brand-header { text-align: center; margin-bottom: 30px; }
+        .logo-wrapper { position: relative; display: inline-block; margin-bottom: 12px; }
+        .logo-img {
+            width: 100px; height: 100px; object-fit: cover; border-radius: 50%;
+            border: 2px solid var(--accent-pink); box-shadow: 0 0 25px rgba(255, 121, 198, 0.5);
+            transition: transform 0.5s ease;
+        }
+        .logo-wrapper:hover .logo-img { transform: rotate(360deg); }
+        
+        h2 {
+            margin: 0;
+            background: linear-gradient(90deg, #ff0055, #ff79c6, #8be9fd, #50fa7b, #ffb86c, #ff0055);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            animation: rainbowFlow 4s linear infinite;
+        }
+
+        @keyframes rainbowFlow {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .form-group { margin-bottom: 22px; }
+        label {
+            display: block; margin-bottom: 10px; font-weight: 600; color: var(--text-muted);
+            text-transform: uppercase; font-size: 12px; letter-spacing: 1px;
+        }
+
+        #loginPanel { display: block; }
+        #mainMenuPanel { display: none; }
+
+        .config-btn-group {
+            display: flex; background: rgba(0, 0, 0, 0.3); padding: 4px;
+            border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .config-btn {
+            flex: 1; padding: 12px; border: none; border-radius: 9px; font-size: 14px;
+            font-weight: 700; cursor: pointer; color: var(--text-muted); background: transparent; transition: all 0.25s ease;
+        }
+        .config-btn:hover { color: #fff; }
+        .config-btn.btn-avatar-config.active {
+            background: linear-gradient(135deg, #ff79c6, #bd93f9); color: #fff; box-shadow: 0 4px 15px rgba(255, 121, 198, 0.3);
+        }
+        .config-btn.btn-cache-config.active {
+            background: linear-gradient(135deg, #8be9fd, #50fa7b); color: #0a0a14; box-shadow: 0 4px 15px rgba(139, 233, 253, 0.3);
+        }
+
+        .custom-select-wrapper { position: relative; user-select: none; }
+        .custom-select-trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 16px; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; color: var(--text-main); cursor: pointer; transition: all 0.3s;
+        }
+        .custom-select-trigger:hover { border-color: var(--accent-cyan); box-shadow: 0 0 12px rgba(139, 233, 253, 0.2); }
+        .selected-info { display: flex; align-items: center; gap: 12px; }
+        .func-img { width: 28px; height: 28px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255, 255, 255, 0.15); }
+        .arrow-icon { border: solid var(--text-muted); border-width: 0 2px 2px 0; display: inline-block; padding: 3.5px; transform: rotate(45deg); transition: transform 0.3s; }
+        .custom-select-wrapper.open .arrow-icon { transform: rotate(-135deg); }
+        
+        .custom-options-container {
+            position: absolute; top: calc(100% + 8px); left: 0; right: 0; background: #141424;
+            border: 1px solid rgba(139, 233, 253, 0.25); border-radius: 14px; box-shadow: 0 16px 40px rgba(0,0,0,0.8);
+            z-index: 100; display: none; overflow: hidden; animation: slideDown 0.25s ease;
+        }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .custom-select-wrapper.open .custom-options-container { display: block; }
+        .custom-option { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; border-bottom: 1px solid rgba(255, 255, 255, 0.03); transition: background 0.2s; }
+        .custom-option:last-child { border-bottom: none; }
+        .custom-option:hover { background: rgba(139, 233, 253, 0.08); }
+        .custom-option .option-content { display: flex; align-items: center; gap: 12px; }
+        .custom-option .option-text { font-size: 14px; font-weight: 500; }
+        .custom-option .checkmark { color: var(--accent-green); font-weight: bold; visibility: hidden; }
+        .custom-option.selected { background: rgba(255, 121, 198, 0.08); }
+
+        .file-drop-area {
+            position: relative; display: flex; flex-direction: column; align-items: center; padding: 25px 20px;
+            background: rgba(0, 0, 0, 0.25); border: 2px dashed rgba(255, 255, 255, 0.15); border-radius: 14px; cursor: pointer; transition: all 0.3s ease; text-align: center;
+        }
+        .file-drop-area:hover, .file-drop-area.dragover { border-color: var(--accent-cyan); background: rgba(139, 233, 253, 0.03); }
+        .file-drop-area .upload-icon { font-size: 28px; margin-bottom: 8px; color: var(--accent-cyan); }
+        .file-drop-area .file-msg { font-size: 14px; color: var(--text-main); font-weight: 500; }
+        .file-drop-area .file-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .file-drop-area input[type="file"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+
+        .key-input-box {
+            width: 100%; box-sizing: border-box; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px; padding: 14px 16px; color: #fff; font-family: 'Courier New', monospace; font-size: 14px; letter-spacing: 1px; outline: none; transition: all 0.3s;
+        }
+        .key-input-box:focus { border-color: var(--accent-pink); box-shadow: 0 0 12px rgba(255, 121, 198, 0.25); }
+
+        .btn-container { display: flex; flex-direction: column; gap: 12px; margin-top: 25px; }
+        button.main-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.25s ease; text-transform: uppercase; letter-spacing: 0.5px; box-sizing: border-box; }
+        #btnVerifyKey { background: linear-gradient(135deg, var(--accent-pink), #e043a4); color: #fff; box-shadow: 0 4px 15px rgba(255, 121, 198, 0.3); }
+        #btnVerifyKey:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 121, 198, 0.45); }
+        #btnProcess { background: linear-gradient(135deg, var(--accent-green), #26d057); color: #0a0a14; box-shadow: 0 4px 15px rgba(80, 250, 123, 0.25); }
+        #btnProcess:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(80, 250, 123, 0.4); }
+        #btnDownload { background: linear-gradient(135deg, var(--accent-orange), #ff9f33); color: #0a0a14; display: none; box-shadow: 0 4px 15px rgba(255, 184, 108, 0.25); }
+        #btnDownload:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 184, 108, 0.4); }
+
+        #status { margin-top: 20px; padding: 14px 16px; border-radius: 10px; display: none; font-size: 13px; line-height: 1.5; text-align: left; font-family: monospace; border-left: 4px solid transparent; }
+        .success { background: rgba(80, 250, 123, 0.1); color: #a2f9b9; border-color: var(--accent-green); }
+        .error { background: rgba(255, 85, 85, 0.1); color: #ff9494; border-color: #ff5555; }
+
+        .social-btn-container { display: flex; gap: 12px; margin-top: 25px; }
+        .social-btn { flex: 1; padding: 11px; border-radius: 10px; font-size: 13px; font-weight: 700; text-decoration: none; text-align: center; transition: all 0.25s; }
+        .btn-telegram { background: rgba(38, 165, 228, 0.15); color: #3ab4f0; border: 1px solid rgba(38, 165, 228, 0.3); }
+        .btn-telegram:hover { background: #26a5e4; color: #fff; box-shadow: 0 4px 15px rgba(38, 165, 228, 0.4); }
+        .btn-zalo { background: rgba(0, 104, 255, 0.15); color: #3887ff; border: 1px solid rgba(0, 104, 255, 0.3); }
+        .btn-zalo:hover { background: #0068ff; color: #fff; box-shadow: 0 4px 15px rgba(0, 104, 255, 0.4); }
+
+        .info-footer { margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.06); font-size: 12px; text-align: center; color: var(--text-muted); }
+        .info-footer strong { color: var(--accent-pink); }
+    </style>
+</head>
+<body>
+
+<canvas id="snowCanvas"></canvas>
+
+<div class="container">
+    <div class="brand-header">
+        <div class="logo-wrapper">
+            <img src="https://i.ibb.co/FqBxJ6zj/IMG-1724.png" alt="Jerry Mod Logo" class="logo-img">
+        </div>
+        <h2>Jerry Mod VIP 🐬</h2>
+    </div>
+    
+    <!-- LOGIN PANEL -->
+    <div id="loginPanel">
+        <div class="form-group">
+            <label>NHẬP KEY ĐỂ MỞ MENU</label>
+            <input type="text" id="inputActivationKey" class="key-input-box" placeholder="Nhập Key của bạn tại đây...">
+        </div>
+        <button type="button" id="btnVerifyKey" class="main-btn">KÍCH HOẠT</button>
+    </div>
+
+    <!-- MAIN MENU PANEL -->
+    <div id="mainMenuPanel">
+        <form id="modForm" onsubmit="return false;">
+            <div class="form-group">
+                <label>CẤU HÌNH ĐỂ MAKE FILE</label>
+                <div class="config-btn-group">
+                    <button type="button" id="btnSelectAvatar" class="config-btn btn-avatar-config active">Make Avatar</button>
+                    <button type="button" id="btnSelectCache" class="config-btn btn-cache-config">Make Cache</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>CHỨC NĂNG THEO YÊU CẦU</label>
+                <div class="custom-select-wrapper" id="customSelectWrapper">
+                    <div class="custom-select-trigger">
+                        <div class="selected-info" id="selectedInfo">
+                            <img src="" class="func-img" id="selectedImg" alt="">
+                            <span id="selectedText">Đang khởi tạo...</span>
+                        </div>
+                        <div class="arrow-icon"></div>
+                    </div>
+                    <div class="custom-options-container" id="customOptionsContainer"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>CHỌN ĐÚNG FILE GỐC ĐỂ TRÁNH LỖI</label>
+                <div class="file-drop-area" id="dropArea">
+                    <span class="upload-icon">📥</span>
+                    <span class="file-msg" id="fileMsg">CHỌN FILE GỐC ĐỂ MAKE FILE.</span>
+                    <span class="file-hint">JERRY MOD CHUYÊN CUNG CẤP CÁC TOOL VIP</span>
+                    <input type="file" id="fileInput" required>
+                </div>
+            </div>
+
+            <div class="btn-container">
+                <button type="button" id="btnProcess" class="main-btn">CHẠY LỆNH MAKE FILE TỰ ĐỘNG</button>
+                <a id="downloadLink" style="display: none;"></a>
+                <button type="button" id="btnDownload" class="main-btn">TẢI TỆP ĐÃ MAKE THÀNH CÔNG</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="status"></div>
+
+    <div class="social-btn-container">
+        <a href="https://t.me/jerry19_05" target="_blank" class="social-btn btn-telegram">Telegram Jerry Mod</a>
+        <a href="https://zalo.me/0559376085" target="_blank" class="social-btn btn-zalo">Zalo Jerry Mod</a>
+    </div>
+
+    <div class="info-footer">
+        Cung cấp độc quyền bởi <strong>Jerry Mod</strong> © 2026
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    // --- SYSTEM APP CONFIGURATION ---
+    const SYSTEM_CONFIG = {
+        firebase: {
+            apiKey: "AIzaSyB4q72j5ig0NR7ikapDreiAh5DN3-ZL4HA",
+            authDomain: "toolafmin.firebaseapp.com",
+            projectId: "toolafmin",
+            storageBucket: "toolafmin.firebasestorage.app",
+            messagingSenderId: "460763722548",
+            appId: "1:460763722548:web:f61615434fac1f85be6b61",
+            measurementId: "G-6MK4NVDNKZ",
+            databaseURL: "https://toolafmin-default-rtdb.asia-southeast1.firebasedatabase.app"
+        },
+        hexData: {
+            aim_drag: {
+                target: "4C7B5ABD0A5766BB1E2148BA2AC2CF3B96FB283DE8B117BDE3997F3F0400803F0100803FFCFF7F3F10000000626F6E655F4C6566745F576561706F6E23AAA6B8460ACD70",
+                replace: "E10AC0BE55DC98BDBD3706B600000000AFEC2B40BD3706B7931A5AB7761CC73F761CC73F761CC73F10000000626F6E655F486561640000000000000023AAA6B8B2F71FA4"
+            },
+            magic: [
+                { target: "4C7B5ABD0A5766BB1E2148BA2AC2CF3B96FB283DE8B117BDE3997F3F0400803F0100803FFCFF7F3F10000000626F6E655F4C6566745F576561706F6E23AAA6B8460ACD70", replace: "170E743FEA5B66BB100448BAC6BFCF3B0DFC283D03B217BDE5997F3F0000604100006041000060410F000000626F6E655F5370696E6531000000000023AAA6B8B2F71FA4" },
+                { target: "477B5ABDAE5766BB5C1F48BA1BC0CF3B9CFB283DA2B117BDE4997F3F0400803F0000803FFEFF7F3F10000000626F6E655F4C6566745F576561706F6E23AAA6B8460ACD70", replace: "170E743FEA5B66BB100448BAC6BFCF3B0DFC283D03B217BDE5997F3F0000604100006041000060410F000000626F6E655F5370696E6531000000000023AAA6B8B2F71FA4" }
+            ],
+            antena_tay: [
+                { target: "B4828F3E3AB11A3E02AD723F6BA5E0BEDE28713F12F7153E31909ABEF0DED33ECADB3CBEFB447A3F7F61CFBD11F82D3D0000000000000000000000000000803F", replace: "B4828F3E3AB11A3E02AD723F6BA5E0BEDE28713F12F7153E31909ABEF0DED33ECADB3CBEFB447A3F7F61CFBD11F82D3D0000000000000000000000000000FA43" },
+                { target: "16080EBFCD0B13BD9FC9543F866885BEE6D354BF37B37F3D3E5E0DBF64CD093F2C5603BDDA557FBF7D0E84BD6556653D0000000000000000000000000000803F", replace: "16080EBFCD0B13BD9FC9543F866885BEE6D354BF37B37F3D3E5E0DBF64CD093F2C5603BDDA557FBF7D0E84BD6556653D0000000000000000000000000000FA43" }
+            ],
+            aimlock_antena: [
+                { target: "4C7B5ABD0A5766BB1E2148BA2AC2CF3B96FB283DE8B117BDE3997F3F0400803F0100803FFCFF7F3F10000000626F6E655F4C6566745F576561706F6E23AAA6B8460ACD70", replace: "D7339CBEBAD7C93CBD3706B600000000AFEC2B40BD3706B7931A5AB7761CC73F761CC73F761CC73F10000000626F6E655F486561640000000000000023AAA6B8B2F71FA4" },
+                { target: "B4828F3E3AB11A3E02AD723F6BA5E0BEDE28713F12F7153E31909ABEF0DED33ECADB3CBEFB447A3F7F61CFBD11F82D3D0000000000000000000000000000FA43", replace: "B4828F3E3AB11A3E02AD723F6BA5E0BEDE28713F12F7153E31909ABEF0DED33ECADB3CBEFB447A3F7F61CFBD11F82D3D0000000000000000000000000000FA43" },
+                { target: "16080EBFCD0B13BD9FC9543F866885BEE6D354BF37B37F3D3E5E0DBF64CD093F2C5603BDDA557FBF7D0E84BD6556653D0000000000000000000000000000803F", replace: "16080EBFCD0B13BD9FC9543F866885BEE6D354BF37B37F3D3E5E0DBF64CD093F2C5603BDDA557FBF7D0E84BD6556653D0000000000000000000000000000FA43" }
+            ],
+            aim_body: [
+                { target: "226e1f3f5300000000000000", replace: "226E1F3F53000000000000000000000000000000000000000000000000000000000100000059DFCA3DE48C023E000000001DBB143E" },
+                { target: "bf9fb489cd0000000000000000000000", replace: "BF9FB489CD00000000000000000000000000000000000000000000000000000000010000003E11CB3D7283053E000000006D27103E" }
+            ]
+        },
+        functionOptions: {
+            avatar: [
+                { value: "aim_drag", text: "Aim Drag Function (JERRY MOD)", img: "https://i.ibb.co/FqBxJ6zj/IMG-1724.png" },
+                { value: "magic", text: "Magic Function (JERRY MOD)", img: "https://i.ibb.co/FqBxJ6zj/IMG-1724.png" },
+                { value: "antena_tay", text: "Antena Tay Only (JERRY MOD)", img: "https://i.ibb.co/FqBxJ6zj/IMG-1724.png" },
+                { value: "aimlock_antena", text: "Aimlock + Antena Tay (JERRY MOD)", img: "https://i.ibb.co/FqBxJ6zj/IMG-1724.png" }
+            ],
+            cache: [
+                { value: "aim_body", text: "Aim Body Function (JERRY MOD)", img: "https://i.ibb.co/FqBxJ6zj/IMG-1724.png" }
+            ]
+        },
+        bones: [
+            "bone_Hips_Dummy", "bone_RightClav", "bone_LeftThumb2", "bone_RightAnkle", "bone_Spine", "bone_RightMiddle1", "bone_Left_Spine_Backpack", "bone_LeftLeg", "bone_Hips", "bone_LeftMiddle2",
+            "bone_RightArm", "bone_RightToe", "bone_LeftThumb1", "bone_LeftAnkle", "bone_LeftHand", "bone_RightThumb1", "bone_LeftF_Hips_Weapon", "bone_LeftForeArm", "bone_Spine1", "bone_RightThumb2",
+            "bone_LeftArm", "bone_RightForeArm", "bone_LeftMiddle1", "bone_RightLegUpper", "bone_LeftLegUpper", "bone_Right_Spine_Weapon", "bone_RightIndex1", "bone_RightLeg", "bone_LeftToe", "bone_RightMiddle2",
+            "bone_LeftClav", "bone_Right_Hips_Weapon", "bone_RightHand", "bone_Left_Spine_Weapon", "bone_LeftIndex1", "bone_RightIndex2", "bone_LeftIndex2"
+        ]
+    };
+
+    // --- CORE JERRY MOD ARCHITECTURE ---
+    class JerryModEngine {
+        constructor() {
+            this.app = initializeApp(SYSTEM_CONFIG.firebase);
+            this.db = getDatabase(this.app);
+            this.verifiedKeyId = null;
+            this.verifiedKeyData = null;
+            this.processedBytes = null;
+            this.originalFileName = "";
+            this.currentSelectedConfig = "avatar";
+            this.currentSelectedValue = "";
+            
+            this.initElements();
+            this.bindEvents();
+            this.initSnowAnimation();
+        }
+
+        initElements() {
+            this.el = {
+                keyInput: document.getElementById('inputActivationKey'),
+                btnVerify: document.getElementById('btnVerifyKey'),
+                loginPanel: document.getElementById('loginPanel'),
+                mainMenuPanel: document.getElementById('mainMenuPanel'),
+                btnSelectAvatar: document.getElementById('btnSelectAvatar'),
+                btnSelectCache: document.getElementById('btnSelectCache'),
+                selectWrapper: document.getElementById('customSelectWrapper'),
+                optionsContainer: document.getElementById('customOptionsContainer'),
+                selectedImg: document.getElementById('selectedImg'),
+                selectedText: document.getElementById('selectedText'),
+                fileInput: document.getElementById('fileInput'),
+                fileMsg: document.getElementById('fileMsg'),
+                dropArea: document.getElementById('dropArea'),
+                btnProcess: document.getElementById('btnProcess'),
+                btnDownload: document.getElementById('btnDownload'),
+                downloadLink: document.getElementById('downloadLink'),
+                status: document.getElementById('status'),
+                canvas: document.getElementById('snowCanvas')
+            };
+        }
+
+        bindEvents() {
+            this.el.btnVerify.addEventListener('click', () => this.verifyActivationKey());
+            this.el.btnSelectAvatar.addEventListener('click', () => this.switchConfigSection('avatar'));
+            this.el.btnSelectCache.addEventListener('click', () => this.switchConfigSection('cache'));
+            this.el.selectWrapper.querySelector('.custom-select-trigger').addEventListener('click', () => this.toggleDropdown());
+            this.el.fileInput.addEventListener('change', () => this.handleFileSelection());
+            this.el.btnProcess.addEventListener('click', () => this.processHexFileStructure());
+            this.el.btnDownload.addEventListener('click', () => this.executeBlobDownload());
+
+            ['dragenter', 'dragover'].forEach(e => this.el.dropArea.addEventListener(e, () => this.el.dropArea.classList.add('dragover'), false));
+            ['dragleave', 'drop'].forEach(e => this.el.dropArea.addEventListener(e, () => this.el.dropArea.classList.remove('dragover'), false));
+
+            this.renderDynamicDropdown();
+
+            // Chạy kiểm tra đăng nhập tự động sau cùng để tránh lỗi bất đồng bộ Dropdown UI
+            window.addEventListener('DOMContentLoaded', () => {
+                const savedKey = localStorage.getItem('jerry_mod_saved_key');
+                if (savedKey) {
+                    this.el.keyInput.value = savedKey;
+                    this.verifyActivationKey();
+                }
+            });
+        }
+
+        getDeviceFingerprint() {
+            let uuid = localStorage.getItem('jerry_mod_hwid');
+            if (!uuid) {
+                uuid = 'DEV-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                localStorage.setItem('jerry_mod_hwid', uuid);
+            }
+            return uuid;
+        }
+
+        showStatus(text, type) {
+            this.el.status.innerText = text;
+            this.el.status.className = type;
+            this.el.status.style.display = "block";
+        }
+
+        toggleDropdown() {
+            this.el.selectWrapper.classList.toggle('open');
+        }
+
+        switchConfigSection(configType) {
+            this.currentSelectedConfig = configType;
+            // Cập nhật trạng thái active trên UI cho chuẩn Dev chuyên nghiệp
+            this.el.btnSelectAvatar.classList.toggle('active', configType === 'avatar');
+            this.el.btnSelectCache.classList.toggle('active', configType === 'cache');
+            this.renderDynamicDropdown();
+        }
+
+        renderDynamicDropdown() {
+            this.el.optionsContainer.innerHTML = "";
+            const options = SYSTEM_CONFIG.functionOptions[this.currentSelectedConfig] || [];
+            options.forEach((opt, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = "custom-option";
+                optionDiv.setAttribute('data-value', opt.value);
+                optionDiv.innerHTML = `<div class="option-content"><img src="${opt.img}" class="func-img" alt=""><span class="option-text">${opt.text}</span></div><div class="checkmark">✓</div>`;
+                optionDiv.onclick = () => {
+                    this.setOptionState(opt.value, opt.text, opt.img);
+                    this.toggleDropdown();
+                };
+                this.el.optionsContainer.appendChild(optionDiv);
+                if (index === 0) this.setOptionState(opt.value, opt.text, opt.img);
+            });
+        }
+
+        setOptionState(value, text, imgUrl) {
+            this.currentSelectedValue = value;
+            this.el.selectedImg.src = imgUrl;
+            this.el.selectedText.innerText = text;
+            this.el.optionsContainer.querySelectorAll('.custom-option').forEach(opt => {
+                opt.classList.toggle('selected', opt.getAttribute('data-value') === value);
+            });
+        }
+
+        handleFileSelection() {
+            if (this.el.fileInput.files.length > 0) {
+                let size = (this.el.fileInput.files[0].size / 1024).toFixed(1);
+                this.el.fileMsg.innerText = `📁 ${this.el.fileInput.files[0].name} (${size} KB)`;
+            } else {
+                this.el.fileMsg.innerText = "CHỌN FILE GỐC ĐỂ MAKE FILE.";
+            }
+        }
+
+        // --- CRYPTO UTILS ---
+        stringToHex(str) {
+            let hex = "";
+            for (let i = 0; i < str.length; i++) { hex += str.charCodeAt(i).toString(16).padStart(2, '0'); }
+            return hex;
+        }
+
+        hexToBytes(hex) {
+            hex = hex.replace(/\s+/g, '');
+            let bytes = new Uint8Array(hex.length / 2);
+            for (let i = 0; i < hex.length; i += 2) { bytes[i / 2] = parseInt(hex.substr(i, 2), 16); }
+            return bytes;
+        }
+
+        replaceByteArray(buffer, targetBytes, replaceBytes) {
+            let view = new Uint8Array(buffer);
+            let count = 0;
+            for (let i = 0; i <= view.length - targetBytes.length; i++) {
+                let match = true;
+                for (let j = 0; j < targetBytes.length; j++) {
+                    if (view[i + j] !== targetBytes[j]) { match = false; break; }
+                }
+                if (match) {
+                    view.set(replaceBytes, i);
+                    count++;
+                    i += targetBytes.length - 1;
+                }
+            }
+            return { updatedBuffer: view, matchCount: count };
+        }
+
+        clearBoneData(buffer) {
+            let currentBuffer = buffer;
+            let boneClearCount = 0;
+            const uniqueBones = [...new Set(SYSTEM_CONFIG.bones)];
+            for (let bone of uniqueBones) {
+                let targetHex = this.stringToHex(bone);
+                let targetBytes = this.hexToBytes(targetHex);
+                let replaceBytes = new Uint8Array(targetBytes.length);
+                let result = this.replaceByteArray(currentBuffer, targetBytes, replaceBytes);
+                currentBuffer = result.updatedBuffer.buffer;
+                boneClearCount += result.matchCount;
+            }
+            return { updatedBuffer: new Uint8Array(currentBuffer), boneCount: boneClearCount };
+        }
+
+        // --- AUTHENTICATION ENGINE ---
+        async verifyActivationKey() {
+            const keyInput = this.el.keyInput.value.trim();
+            if (!keyInput) {
+                this.showStatus("[Jerry Mod] Hãy nhập mã Key VIP của bạn!", "error");
+                return;
+            }
+
+            const myDeviceHwid = this.getDeviceFingerprint();
+            this.showStatus("[INFO] Đang liên kết kiểm tra mã Key và bảo mật thiết bị...", "success");
+
+            try {
+                const snap = await get(ref(this.db, 'boost_keys'));
+                if (!snap.exists()) {
+                    this.showStatus("[ERROR] Cơ sở dữ liệu trống hoặc không khả dụng!", "error");
+                    return;
+                }
+
+                let foundId = null, foundData = null;
+                Object.entries(snap.val()).forEach(([id, data]) => {
+                    if (data.keyStr === keyInput) { foundId = id; foundData = data; }
+                });
+
+                if (!foundId) {
+                    this.showStatus("[Jerry Mod] Mã Key nhập vào sai hoặc đã bị Admin xoá!", "error");
+                    localStorage.removeItem('jerry_mod_saved_key');
+                    return;
+                }
+
+                if (foundData.locked) return this.showStatus("[Jerry Mod] Key này đã bị Admin khóa quyền truy cập!", "error");
+                if (foundData.expiry > 0 && Date.now() > foundData.expiry) return this.showStatus("[Jerry Mod] Key VIP của bạn đã hết hạn sử dụng!", "error");
+                if (foundData.maxAccess > 0 && (foundData.accessCount || 0) >= foundData.maxAccess) return this.showStatus("[Jerry Mod] Key này đã sử dụng hết lượt quy định!", "error");
+                if (foundData.deviceFingerprint && foundData.deviceFingerprint !== myDeviceHwid) return this.showStatus("[Jerry Mod] Key đã bị khóa trên thiết bị khác! Liên hệ Admin để reset.", "error");
+
+                if (!foundData.deviceFingerprint) {
+                    let bindDeviceUpdate = {};
+                    bindDeviceUpdate[`boost_keys/${foundId}/deviceFingerprint`] = myDeviceHwid;
+                    await update(ref(this.db), bindDeviceUpdate);
+                    foundData.deviceFingerprint = myDeviceHwid;
+                }
+
+                localStorage.setItem('jerry_mod_saved_key', keyInput);
+                this.el.keyInput.value = '';
+                this.verifiedKeyId = foundId;
+                this.verifiedKeyData = foundData;
+
+                this.el.loginPanel.style.display = 'none';
+                this.el.mainMenuPanel.style.display = 'block';
+                this.showStatus(`[JerryMod] Thiết bị đã đồng bộ! Đăng nhập thành công Menu VIP.`, "success");
+            } catch (err) {
+                this.showStatus("[FATAL] Lỗi mạng hoặc Firebase bị từ chối: " + err.message, "error");
+            }
+        }
+
+        // --- FILE INJECTION PROCESSOR ---
+        async processHexFileStructure() {
+            const makeFunction = this.currentSelectedValue;
+            const myDeviceHwid = this.getDeviceFingerprint();
+
+            if (!this.verifiedKeyId) return this.showStatus("[Jerry Mod] Trạng thái Key không hợp lệ. Vui lòng tải lại trang!", "error");
+            if (!this.el.fileInput.files || this.el.fileInput.files.length === 0) return this.showStatus("[Jerry Mod] Bạn chưa chọn file gốc để thực hiện build!", "error");
+
+            try {
+                const checkSnap = await get(ref(this.db, `boost_keys/${this.verifiedKeyId}`));
+                const liveData = checkSnap.val();
+                
+                if (!liveData || liveData.locked || (liveData.expiry > 0 && Date.now() > liveData.expiry)) return this.showStatus("[Jerry Mod] Key đã bị Admin thay đổi trạng thái đột ngột!", "error");
+                if (liveData.deviceFingerprint !== myDeviceHwid) return this.showStatus("[Jerry Mod] Phát hiện xung đột! Thiết bị không hợp lệ để thực thi.", "error");
+                if (liveData.maxAccess > 0 && (liveData.accessCount || 0) >= liveData.maxAccess) return this.showStatus("[Jerry Mod] Key đã vừa hết lượt dùng!", "error");
+
+                const file = this.el.fileInput.files[0];
+                this.originalFileName = file.name;
+                const reader = new FileReader();
+
+                this.showStatus("[INFO] Đang chạy lệnh giải mã nhị phân Inject Script...", "success");
+
+                reader.onload = async (e) => {
+                    let arrayBuffer = e.target.result;
+                    let totalMatches = 0;
+                    const currentConfig = SYSTEM_CONFIG.hexData[makeFunction];
+
+                    if (Array.isArray(currentConfig)) {
+                        let currentBuffer = arrayBuffer;
+                        for (let step of currentConfig) {
+                            let targetBytes = this.hexToBytes(step.target);
+                            let replaceBytes = this.hexToBytes(step.replace);
+                            let result = this.replaceByteArray(currentBuffer, targetBytes, replaceBytes);
+                            currentBuffer = result.updatedBuffer.buffer;
+                            totalMatches += result.matchCount;
+                        }
+                        this.processedBytes = new Uint8Array(currentBuffer);
+                    } else {
+                        let targetBytes = this.hexToBytes(currentConfig.target);
+                        let replaceBytes = this.hexToBytes(currentConfig.replace);
+                        let result = this.replaceByteArray(arrayBuffer, targetBytes, replaceBytes);
+                        totalMatches = result.matchCount;
+                        this.processedBytes = result.updatedBuffer;
+                    }
+
+                    let totalBonesReplaced = 0;
+                    if (makeFunction === "aim_body") {
+                        let boneResult = this.clearBoneData(this.processedBytes.buffer);
+                        this.processedBytes = boneResult.updatedBuffer;
+                        totalBonesReplaced = boneResult.boneCount;
+                    }
+
+                    if (totalMatches > 0) {
+                        let newCount = (liveData.accessCount || 0) + 1;
+                        let upd = {};
+                        upd[`boost_keys/${this.verifiedKeyId}/accessCount`] = newCount;
+                        await update(ref(this.db), upd);
+
+                        let accessStatusText = liveData.maxAccess > 0 ? ` (Lượt dùng: ${newCount}/${liveData.maxAccess})` : " (Hạn dùng: Vĩnh viễn)";
+                        this.showStatus(`ĐÃ MAKE THÀNH CÔNG! ĐÃ TIÊM ANTIBAN VÀO FILE ${totalBonesReplaced > 0 ? `(Đã dọn thêm ${totalBonesReplaced} Bone)` : ''}${accessStatusText}`, "success");
+                        this.el.btnDownload.style.display = "block";
+                    } else {
+                        this.processedBytes = null;
+                        this.el.btnDownload.style.display = "none";
+                        if (makeFunction === "aim_body") {
+                            let testBoneResult = this.clearBoneData(arrayBuffer);
+                            if (testBoneResult.boneCount > 0) return this.showStatus("[CONFLICT] File chứa cấu trúc bone hợp lệ nhưng sai phân vùng tính năng!", "error");
+                        }
+                        this.showStatus("BỊ NGƠ À, CHỌN CẤU HÌNH ĐÚNG VỚI FILE ĐỂ MAKE.", "error");
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } catch (err) {
+                this.showStatus("[FATAL] Lỗi đồng bộ dữ liệu: " + err.message, "error");
+            }
+        }
+
+        executeBlobDownload() {
+            if (!this.processedBytes) return;
+            const blob = new Blob([this.processedBytes], { type: "application/octet-stream" });
+            this.el.downloadLink.href = URL.createObjectURL(blob);
+            this.el.downloadLink.download = "mod_" + this.originalFileName;
+            this.el.downloadLink.click();
+        }
+
+        // --- VISUAL EFFECT SYSTEM ---
+        initSnowAnimation() {
+            if (!this.el.canvas) return;
+            const ctx = this.el.canvas.getContext('2d');
+            let flakes = [];
+            const resize = () => { this.el.canvas.width = window.innerWidth; this.el.canvas.height = window.innerHeight; };
+            window.addEventListener('resize', resize);
+            resize();
+            
+            for (let i = 0; i < 50; i++) {
+                flakes.push({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, r: Math.random() * 2 + 0.8, d: Math.random() * 50, speed: Math.random() * 0.8 + 0.3 });
+            }
+            
+            const animate = () => {
+                ctx.clearRect(0, 0, this.el.canvas.width, this.el.canvas.height);
+                ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+                ctx.beginPath();
+                for (let f of flakes) {
+                    ctx.moveTo(f.x, f.y);
+                    ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2, true);
+                    f.y += f.speed; f.x += Math.sin(f.d / 10) * 0.3;
+                    if (f.y > this.el.canvas.height) { f.y = 0; f.x = Math.random() * this.el.canvas.width; }
+                }
+                ctx.fill();
+                requestAnimationFrame(animate);
+            };
+            animate();
+        }
+    }
+
+    // Khởi tạo hệ thống
+    const JerryMod = new JerryModEngine();
+</script>
+</body>
+</html>
